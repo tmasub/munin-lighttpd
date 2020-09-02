@@ -24,9 +24,9 @@ env.statusurl http://ip/other_status?auto
 
 import os
 import sys
-import urllib2
+import urllib.request
 
-STATUS_URL = os.environ.get('statusurl', 'http://127.0.0.1/server-status?auto')
+STATUS_URL = os.environ.get('statusurl', 'http://localhost/server-status?auto')
 AUTH_TYPE = os.environ.get('auth_type', '')
 AUTH_REALM = os.environ.get('auth_realm', '')
 AUTH_USER = os.environ.get('auth_user', '')
@@ -53,46 +53,46 @@ def print_config(name):
              'Idle connections'],
         }
 
-    print "graph_title %s" % (typedict[name][0])
-    print "graph_vlabel %s" % (typedict[name][1])
-    print "graph_category lighttpd"
-    print "graph_info %s" % (typedict[name][2])
-    print "data.label %s" % (typedict[name][3])
+    print("graph_title %s" % (typedict[name][0]))
+    print("graph_vlabel %s" % (typedict[name][1]))
+    print("graph_category lighttpd")
+    print("graph_info %s" % (typedict[name][2]))
+    print("data.label %s" % (typedict[name][3]))
 
     if name in counters:
-        print "data.type DERIVE\ndata.min 0"
+        print("data.type DERIVE\ndata.min 0")
 
     if name == 'kbytes':
-        print "data.cdef data,8000,*"
+        print("data.cdef data,8000,*")
 
 
 def print_status(name, url):
     """Gets lighttpd's status and prints the requested value."""
 
-    statuslist = urllib2.urlopen(url).readlines()
     mappings = {'Total Accesses': 'accesses',
                 'Total kBytes': 'kbytes',
                 'Uptime': 'uptime',
                 'BusyServers': 'busyservers',
                 'IdleServers': 'idleservers'}
 
-    for i in statuslist:
-        key, value = i.split(':')
-        if key in mappings.keys():
-            if mappings[key] == name:
-                print 'data.value %s' % value.strip()
+    with urllib.request.urlopen(url) as statuslist:
+        for i in statuslist.readlines():
+            key, value = i.decode().split(':')
+            if key in mappings.keys():
+                if mappings[key] == name:
+                    print('data.value %s' % value.strip())
 
 def main():
     """Act like a Munin plugin."""
     if len(sys.argv) > 1:
         if sys.argv[1] == 'suggest':
-            print "accesses\nkbytes\nuptime\nbusyservers\nidleservers"
+            print("accesses\nkbytes\nuptime\nbusyservers\nidleservers")
             sys.exit(0)
         elif  sys.argv[1] == 'autoconf':
-            if os.path.exists('/etc/lighttpd'):
-                print 'yes'
+            if os.path.exists('/usr/local/etc/lighttpd'):
+                print('yes')
             else:
-                print 'no'
+                print('no')
             sys.exit(0)
 
     try:
@@ -102,7 +102,7 @@ def main():
 
     if param not in ['accesses', 'kbytes', 'uptime', 'busyservers',
                      'idleservers']:
-        print 'unknown parameter %s' % (param)
+        print('unknown parameter %s' % (param))
         sys.exit(1)
 
     if len(sys.argv) > 1 and sys.argv[1] == 'config':
@@ -111,17 +111,17 @@ def main():
 
     if (AUTH_TYPE == 'basic' or AUTH_TYPE == 'digest'):
         if (AUTH_TYPE == 'basic'):
-            auth_handler = urllib2.HTTPBasicAuthHandler()
+            auth_handler = urllib.request.HTTPBasicAuthHandler()
         else:
-            auth_handler = urllib2.HTTPDigestAuthHandler()
+            auth_handler = urllib.request.HTTPDigestAuthHandler()
 
         auth_handler.add_password(realm=AUTH_REALM,
                                   uri=STATUS_URL,
                                   user=AUTH_USER,
                                   passwd=AUTH_PASSWORD)
 
-        opener = urllib2.build_opener(auth_handler)
-        urllib2.install_opener(opener)
+        opener = urllib.request.build_opener(auth_handler)
+        urllib.request.install_opener(opener)
 
     print_status(param, STATUS_URL)
 

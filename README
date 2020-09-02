@@ -17,9 +17,9 @@ You can optionally configure this plugin in your munin-node configuration:
 [lighttpd_*]
 # statusurl: set a different URL for lighttpd status
 env.statusurl http://ip/other_status?auto
-# auth_type: use basic or digest authentication via urllib2
+# auth_type: use basic or digest authentication via urllib
 env.auth_type basic|digest
-# auth_realm, auth_user, and auth_password are passed to urllib2's
+# auth_realm, auth_user, and auth_password are passed to urllib's
 # auth handler verbatim
 env.auth_realm
 env.auth_user
